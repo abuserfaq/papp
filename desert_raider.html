@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Desert Raiders — 3D</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0a; color: #fff; font-family: 'Georgia', serif; overflow: hidden; }
+
+  #menu {
+    position: fixed; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; z-index: 100;
+    background: radial-gradient(ellipse at center, #1a0a00 0%, #000 100%);
+  }
+  #menu h1 {
+    font-size: 3.5rem; letter-spacing: 0.15em; margin-bottom: 0.3em;
+    text-shadow: 0 0 30px currentColor;
+  }
+  #menu p { font-size: 1rem; opacity: 0.6; margin-bottom: 2.5rem; letter-spacing: 0.1em; }
+  .faction-row { display: flex; gap: 2rem; margin-bottom: 1.5rem; }
+  .faction-btn {
+    width: 200px; height: 200px; border: 2px solid; border-radius: 8px;
+    background: rgba(255,255,255,0.04); cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 12px; font-size: 1rem; letter-spacing: 0.08em; transition: all 0.3s;
+    font-family: inherit;
+  }
+  .faction-btn:hover { background: rgba(255,255,255,0.1); transform: scale(1.05); }
+  .faction-btn svg { width: 80px; height: 80px; }
+  #btn-crescent { color: #00c896; border-color: #00c896; }
+  #btn-star { color: #4ea8ff; border-color: #4ea8ff; }
+
+  #hud {
+    position: fixed; bottom: 0; left: 0; right: 0; height: 80px;
+    display: flex; align-items: center; justify-content: space-between; padding: 0 24px;
+    background: rgba(0,0,0,0.85); border-top: 2px solid; z-index: 10; display: none;
+  }
+  #hud-symbol { width: 54px; height: 54px; }
+  #hud-health { font-size: 1.4rem; letter-spacing: 0.1em; }
+  #hud-ammo   { font-size: 1.4rem; letter-spacing: 0.1em; }
+  #hud-score  { font-size: 1.1rem; opacity: 0.75; }
+  #hud-name   { font-size: 0.9rem; opacity: 0.5; letter-spacing: 0.15em; text-transform: uppercase; }
+
+  #crosshair {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 16px; height: 16px; pointer-events: none; z-index: 10; display: none;
+  }
+  #crosshair::before, #crosshair::after {
+    content: ''; position: absolute; background: rgba(255,255,255,0.7);
+  }
+  #crosshair::before { width: 2px; height: 16px; left: 7px; top: 0; }
+  #crosshair::after  { width: 16px; height: 2px; top: 7px; left: 0; }
+
+  #msg {
+    position: fixed; top: 40%; left: 50%; transform: translateX(-50%);
+    font-size: 2rem; letter-spacing: 0.1em; z-index: 20; display: none;
+    text-shadow: 0 0 20px currentColor; pointer-events: none;
+  }
+
+  canvas { display: block; }
+</style>
+</head>
+<body>
+
+<!-- MENU -->
+<div id="menu">
+  <h1 id="menu-title" style="color:#c8a030">⚔ DESERT RAIDERS ⚔</h1>
+  <p>Choose your faction — then fight through the ancient citadel</p>
+  <div class="faction-row">
+
+    <!-- Islamic faction -->
+    <button class="faction-btn" id="btn-crescent" onclick="startGame('crescent')">
+      <!-- Crescent & Star SVG -->
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M50 15 C28 15 15 30 15 50 C15 70 28 85 50 85 C35 78 27 65 27 50 C27 35 35 22 50 15Z" fill="#00c896"/>
+        <path d="M62 28 L65 38 L75 38 L67 44 L70 54 L62 48 L54 54 L57 44 L49 38 L59 38Z" fill="#00c896"/>
+      </svg>
+      Islamic Warrior
+    </button>
+
+    <!-- Jewish faction -->
+    <button class="faction-btn" id="btn-star" onclick="startGame('star')">
+      <!-- Star of David SVG -->
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,10 61,33 87,33 66,50 74,75 50,60 26,75 34,50 13,33 39,33" fill="none" stroke="#4ea8ff" stroke-width="4"/>
+        <polygon points="50,10 39,33 61,33" fill="#4ea8ff" opacity="0.3"/>
+        <line x1="50" y1="10" x2="50" y2="90" stroke="#4ea8ff" stroke-width="1.5" opacity="0.2"/>
+        <!-- Star of David proper -->
+        <g transform="translate(50,50)">
+          <polygon points="0,-28 24.2,14 -24.2,14" fill="none" stroke="#4ea8ff" stroke-width="3.5"/>
+          <polygon points="0,28 24.2,-14 -24.2,-14" fill="none" stroke="#4ea8ff" stroke-width="3.5"/>
+        </g>
+      </svg>
+      Jewish Guard
+    </button>
+
+  </div>
+  <p style="opacity:0.35;font-size:0.8rem;">WASD / Arrow Keys — Move &nbsp;|&nbsp; Mouse / Q,E — Turn &nbsp;|&nbsp; Space / Click — Fire</p>
+</div>
+
+<!-- HUD -->
+<div id="hud">
+  <svg id="hud-symbol" viewBox="0 0 100 100"></svg>
+  <div>
+    <div id="hud-name">---</div>
+    <div id="hud-health">❤ 100</div>
+  </div>
+  <div id="hud-score">SCORE: 0</div>
+  <div id="hud-ammo">⬡ 99</div>
+</div>
+
+<div id="crosshair"></div>
+<div id="msg"></div>
+
+<canvas id="c"></canvas>
+
+<script>
+// ─────────────── CONFIG ───────────────
+const W = window.innerWidth;
+const H = window.innerHeight - 80;
+const FOV = Math.PI / 3;
+const RAYS = Math.floor(W / 2);
+const HALF = H / 2;
+const MAX_DEPTH = 20;
+const CELL = 64;
+const MOVE_SPEED = 0.05;
+const ROT_SPEED = 0.03;
+
+// ─────────────── MAP ───────────────
+// 1=wall, 0=floor
+const MAP_W = 16, MAP_H = 16;
+const RAW_MAP = [
+  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+  1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,
+  1,0,1,1,0,0,1,0,0,1,1,1,0,0,0,1,
+  1,0,1,0,0,0,0,0,0,0,0,1,0,1,0,1,
+  1,0,0,0,1,0,1,1,1,0,0,0,0,1,0,1,
+  1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+  1,1,0,1,1,0,1,1,0,1,1,0,1,1,0,1,
+  1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+  1,0,0,0,0,0,1,0,0,1,0,0,0,0,0,1,
+  1,0,1,1,0,0,1,0,0,1,0,1,1,0,0,1,
+  1,0,0,1,0,0,0,0,0,0,0,0,1,0,0,1,
+  1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,
+  1,1,0,1,0,0,0,1,1,0,0,0,1,0,1,1,
+  1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+  1,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,
+  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+];
+function getMap(x,y){ return RAW_MAP[y*MAP_W+x]; }
+
+// ─────────────── ENEMIES ───────────────
+function makeEnemies(){
+  return [
+    {x:3.5,y:3.5,hp:3,alive:true},
+    {x:9.5,y:2.5,hp:3,alive:true},
+    {x:5.5,y:8.5,hp:3,alive:true},
+    {x:12.5,y:5.5,hp:3,alive:true},
+    {x:7.5,y:12.5,hp:3,alive:true},
+    {x:11.5,y:11.5,hp:3,alive:true},
+    {x:2.5,y:13.5,hp:3,alive:true},
+    {x:13.5,y:13.5,hp:3,alive:true},
+  ];
+}
+
+// ─────────────── STATE ───────────────
+let faction='crescent', playerColor='#00c896', enemyColor='#e05050';
+let px=1.5,py=1.5,pAngle=0;
+let health=100, ammo=99, score=0;
+let keys={};
+let mouseX=0, lastMouseX=0;
+let enemies=[];
+let shots=[];
+let running=false;
+let animFrame=null;
+
+// ─────────────── CANVAS ───────────────
+const canvas=document.getElementById('c');
+const ctx=canvas.getContext('2d');
+canvas.width=W; canvas.height=H;
+
+// ─────────────── FACTION SETUP ───────────────
+function startGame(f){
+  faction=f;
+  enemies=makeEnemies();
+  health=100; ammo=99; score=0;
+  px=1.5; py=1.5; pAngle=0;
+  running=true;
+
+  if(f==='crescent'){
+    playerColor='#00c896';
+    enemyColor='#4ea8ff';
+    document.getElementById('hud').style.borderColor='#00c896';
+    document.getElementById('hud-name').textContent='ISLAMIC WARRIOR';
+    setHUDSymbolCrescent();
+  } else {
+    playerColor='#4ea8ff';
+    enemyColor='#00c896';
+    document.getElementById('hud').style.borderColor='#4ea8ff';
+    document.getElementById('hud-name').textContent='JEWISH GUARD';
+    setHUDSymbolStar();
+  }
+
+  document.getElementById('menu').style.display='none';
+  document.getElementById('hud').style.display='flex';
+  document.getElementById('crosshair').style.display='block';
+  document.getElementById('crosshair').style.color=playerColor;
+
+  canvas.requestPointerLock?.();
+  if(animFrame) cancelAnimationFrame(animFrame);
+  loop();
+}
+
+function setHUDSymbolCrescent(){
+  document.getElementById('hud-symbol').innerHTML=`
+    <path d="M50 10 C25 10 10 28 10 50 C10 72 25 90 50 90 C30 82 20 67 20 50 C20 33 30 18 50 10Z" fill="#00c896"/>
+    <polygon points="62,20 65,32 78,32 67,40 71,52 62,44 53,52 57,40 46,32 59,32" fill="#00c896"/>`;
+}
+function setHUDSymbolStar(){
+  document.getElementById('hud-symbol').innerHTML=`
+    <g transform="translate(50,50)">
+      <polygon points="0,-35 30.3,17.5 -30.3,17.5" fill="none" stroke="#4ea8ff" stroke-width="5"/>
+      <polygon points="0,35 30.3,-17.5 -30.3,-17.5" fill="none" stroke="#4ea8ff" stroke-width="5"/>
+    </g>`;
+}
+
+// ─────────────── INPUT ───────────────
+document.addEventListener('keydown',e=>{
+  keys[e.code]=true;
+  if(e.code==='Space' && running) shoot();
+});
+document.addEventListener('keyup',e=>{ keys[e.code]=false; });
+document.addEventListener('mousemove',e=>{
+  if(document.pointerLockElement===canvas){
+    pAngle += e.movementX * 0.002;
+  }
+});
+canvas.addEventListener('click',e=>{
+  canvas.requestPointerLock?.();
+  if(running) shoot();
+});
+
+function shoot(){
+  if(ammo<=0) return;
+  ammo--;
+  updateHUD();
+  // check if enemy in crosshair
+  enemies.forEach(en=>{
+    if(!en.alive) return;
+    let dx=en.x-px, dy=en.y-py;
+    let dist=Math.hypot(dx,dy);
+    if(dist>12) return;
+    let angle=Math.atan2(dy,dx);
+    let diff = normalizeAngle(angle - pAngle);
+    if(Math.abs(diff)<0.12){
+      en.hp--;
+      if(en.hp<=0){
+        en.alive=false;
+        score+=100;
+        showMsg('+100',playerColor);
+        updateHUD();
+      }
+    }
+  });
+}
+
+function normalizeAngle(a){
+  while(a> Math.PI) a-=2*Math.PI;
+  while(a<-Math.PI) a+=2*Math.PI;
+  return a;
+}
+
+// ─────────────── RAYCASTER ───────────────
+function castRay(angle){
+  let sinA=Math.sin(angle), cosA=Math.cos(angle);
+  let dist=0;
+  for(let step=0; step<MAX_DEPTH*50; step++){
+    dist += 0.02;
+    let tx=px+cosA*dist, ty=py+sinA*dist;
+    let mx=Math.floor(tx), my=Math.floor(ty);
+    if(mx<0||my<0||mx>=MAP_W||my>=MAP_H) return {dist:MAX_DEPTH,hit:false};
+    if(getMap(mx,my)===1){
+      // check side for shading
+      let hitX=(tx-Math.floor(tx));
+      let hitY=(ty-Math.floor(ty));
+      let side = Math.abs(cosA)<Math.abs(sinA)?0:1; // 0=NS wall 1=EW
+      return {dist, hit:true, side, hitX, hitY};
+    }
+  }
+  return {dist:MAX_DEPTH,hit:false};
+}
+
+// ─────────────── DRAW WALL TEXTURE ───────────────
+function drawWallSlice(x, wallTop, wallBottom, dist, side, hitX, faction){
+  let h = wallBottom - wallTop;
+  // Base color
+  let bright = Math.max(0, 1 - dist/MAX_DEPTH);
+  if(side===1) bright*=0.7;
+
+  if(faction==='crescent'){
+    // Islamic: teal/gold walls with geometric pattern suggestion
+    let r=Math.floor(0*bright), g=Math.floor(120*bright), b=Math.floor(80*bright);
+    // Arabesque stripe every 1/8 of wall
+    let stripe = Math.floor(hitX*8)%2===0;
+    if(stripe){ r=Math.floor(160*bright); g=Math.floor(120*bright); b=Math.floor(0*bright); }
+    ctx.fillStyle=`rgb(${r},${g},${b})`;
+  } else {
+    // Jewish: stone blue/gold walls
+    let r=Math.floor(20*bright), g=Math.floor(60*bright), b=Math.floor(140*bright);
+    let stripe = Math.floor(hitX*6)%2===0;
+    if(stripe){ r=Math.floor(180*bright); g=Math.floor(150*bright); b=Math.floor(20*bright); }
+    ctx.fillStyle=`rgb(${r},${g},${b})`;
+  }
+  ctx.fillRect(x, wallTop, 1, h);
+}
+
+// ─────────────── DRAW ENEMIES ───────────────
+function drawEnemies(zbuffer){
+  enemies.forEach(en=>{
+    if(!en.alive) return;
+    let dx=en.x-px, dy=en.y-py;
+    let dist=Math.hypot(dx,dy);
+    if(dist<0.3||dist>12) return;
+
+    let sprAngle=Math.atan2(dy,dx)-pAngle;
+    while(sprAngle> Math.PI) sprAngle-=2*Math.PI;
+    while(sprAngle<-Math.PI) sprAngle+=2*Math.PI;
+    if(Math.abs(sprAngle)>FOV) return;
+
+    let screenX=Math.floor((0.5+sprAngle/FOV)*W);
+    let sprH=Math.floor(H/dist*0.85);
+    let sprW=sprH;
+    let top=Math.floor(HALF-sprH/2);
+    let left=screenX-sprW/2;
+
+    // Check z-buffer
+    let centerCol=Math.floor((0.5+sprAngle/FOV)*RAYS);
+    if(zbuffer[centerCol]<dist) return;
+
+    // Draw sprite: colored silhouette + faction symbol
+    let alpha=Math.min(1,1.2-dist/12);
+    ctx.save();
+    ctx.globalAlpha=alpha;
+
+    // Body
+    ctx.fillStyle=enemyColor;
+    ctx.fillRect(left+sprW*0.3, top+sprH*0.4, sprW*0.4, sprH*0.5);
+    // Head
+    ctx.beginPath();
+    ctx.arc(screenX, top+sprH*0.22, sprW*0.15, 0, Math.PI*2);
+    ctx.fill();
+
+    // Faction symbol on enemy
+    if(faction==='crescent'){
+      // Enemy is Jewish: draw star of David on chest
+      drawMiniStar(ctx, screenX, top+sprH*0.55, sprH*0.1, '#4ea8ff');
+    } else {
+      // Enemy is Islamic: draw crescent on chest
+      drawMiniCrescent(ctx, screenX, top+sprH*0.55, sprH*0.1, '#00c896');
+    }
+    ctx.restore();
+  });
+}
+
+function drawMiniStar(ctx,cx,cy,r,col){
+  ctx.save(); ctx.strokeStyle=col; ctx.lineWidth=Math.max(1,r*0.2);
+  ctx.beginPath();
+  for(let i=0;i<3;i++){
+    let a=i*Math.PI/3*2-Math.PI/2;
+    let a2=a+Math.PI;
+    ctx.moveTo(cx+Math.cos(a)*r, cy+Math.sin(a)*r);
+    ctx.lineTo(cx+Math.cos(a2)*r, cy+Math.sin(a2)*r);
+  }
+  ctx.stroke(); ctx.restore();
+}
+
+function drawMiniCrescent(ctx,cx,cy,r,col){
+  ctx.save(); ctx.fillStyle=col;
+  ctx.beginPath();
+  ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.fill();
+  ctx.globalCompositeOperation='destination-out';
+  ctx.beginPath();
+  ctx.arc(cx+r*0.4,cy,r*0.75,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+// ─────────────── FLOOR & CEILING ───────────────
+function drawFloorCeiling(){
+
+  // Ceiling
+  let cg=ctx.createLinearGradient(0,0,0,HALF);
+  if(faction==='crescent'){
+    cg.addColorStop(0,'#001a12');
+    cg.addColorStop(1,'#002a1e');
+  } else {
+    cg.addColorStop(0,'#000a1a');
+    cg.addColorStop(1,'#001030');
+  }
+  ctx.fillStyle=cg;
+  ctx.fillRect(0,0,W,HALF);
+
+  // Floor
+  let fg=ctx.createLinearGradient(0,HALF,0,H);
+  fg.addColorStop(0,'#1a1200');
+  fg.addColorStop(1,'#0a0800');
+  ctx.fillStyle=fg;
+  ctx.fillRect(0,HALF,W,HALF);
+}
+
+// ─────────────── GUN ───────────────
+let gunBob=0, gunBobDir=1, gunFire=0;
+function drawGun(){
+  let gunX=W/2-40;
+  let gunY=H-120+Math.sin(gunBob)*6;
+  if(gunFire>0){ gunY-=gunFire*15; gunFire=Math.max(0,gunFire-0.15); }
+
+  ctx.save();
+  ctx.fillStyle=playerColor;
+  if(faction==='crescent'){
+    // Scimitar-style barrel
+    ctx.beginPath();
+    ctx.moveTo(gunX+30,gunY+80);
+    ctx.lineTo(gunX+50,gunY+80);
+    ctx.lineTo(gunX+55,gunY+20);
+    ctx.lineTo(gunX+35,gunY+10);
+    ctx.lineTo(gunX+20,gunY+30);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle='#c8a030';
+    // guard
+    ctx.fillRect(gunX+22,gunY+68,30,8);
+  } else {
+    // Menorah-inspired pistol
+    ctx.fillRect(gunX+25,gunY+20,8,70);
+    ctx.fillRect(gunX+15,gunY+30,28,6);
+    [0,10,20,28,38,48,58].forEach((ox,i)=>{
+      if(i===3) return; // center arm is the barrel
+      ctx.fillRect(gunX+15+ox,gunY+30,4,i===3?0:-(10+i%2*5));
+    });
+    ctx.fillStyle='#c8a030';
+    ctx.fillRect(gunX+18,gunY+82,26,8);
+  }
+  ctx.restore();
+}
+
+// ─────────────── MAIN LOOP ───────────────
+let lastTime=0;
+function loop(ts=0){
+  animFrame=requestAnimationFrame(loop);
+  let dt=Math.min((ts-lastTime)/16,3); lastTime=ts;
+  if(!running) return;
+
+  // Movement
+  let nx=px, ny=py;
+  let speed=MOVE_SPEED*dt;
+  let rspeed=ROT_SPEED*dt;
+
+  if(keys['ArrowLeft']||keys['KeyQ'])  pAngle-=rspeed;
+  if(keys['ArrowRight']||keys['KeyE']) pAngle+=rspeed;
+  if(keys['ArrowUp']||keys['KeyW']){
+    nx+=Math.cos(pAngle)*speed;
+    ny+=Math.sin(pAngle)*speed;
+  }
+  if(keys['ArrowDown']||keys['KeyS']){
+    nx-=Math.cos(pAngle)*speed;
+    ny-=Math.sin(pAngle)*speed;
+  }
+  if(keys['KeyA']){
+    nx+=Math.cos(pAngle-Math.PI/2)*speed;
+    ny+=Math.sin(pAngle-Math.PI/2)*speed;
+  }
+  if(keys['KeyD']){
+    nx+=Math.cos(pAngle+Math.PI/2)*speed;
+    ny+=Math.sin(pAngle+Math.PI/2)*speed;
+  }
+
+  if(!getMap(Math.floor(nx),Math.floor(py))) px=nx;
+  if(!getMap(Math.floor(px),Math.floor(ny))) py=ny;
+
+  // Gun bob
+  if(keys['KeyW']||keys['ArrowUp']||keys['KeyS']||keys['ArrowDown']){
+    gunBob+=0.12*dt*gunBobDir;
+    if(Math.abs(gunBob)>1) gunBobDir*=-1;
+  }
+
+  // Enemy damage
+  enemies.forEach(en=>{
+    if(!en.alive) return;
+    let dist=Math.hypot(en.x-px, en.y-py);
+    if(dist<0.8){
+      health-=0.3*dt;
+      updateHUD();
+      if(health<=0){ gameOver(); }
+    }
+  });
+
+  // Draw
+  drawFloorCeiling();
+
+  let zbuffer=[];
+  for(let r=0;r<RAYS;r++){
+    let rayAngle=pAngle - FOV/2 + (r/RAYS)*FOV;
+    let res=castRay(rayAngle);
+    let corr=res.dist*Math.cos(rayAngle-pAngle);
+    let wallH=Math.floor(H/corr);
+    let wallTop=HALF-wallH/2;
+    let wallBot=HALF+wallH/2;
+    let screenX=Math.floor(r*(W/RAYS));
+    drawWallSlice(screenX,wallTop,wallBot,res.dist,res.side,res.hitX??0,faction);
+    zbuffer[r]=corr;
+  }
+
+  drawEnemies(zbuffer);
+  drawGun();
+  updateHUD();
+
+  // Win check
+  if(enemies.every(e=>!e.alive)) winGame();
+}
+
+function updateHUD(){
+  document.getElementById('hud-health').textContent='❤ '+Math.max(0,Math.floor(health));
+  document.getElementById('hud-ammo').textContent='⬡ '+ammo;
+  document.getElementById('hud-score').textContent='SCORE: '+score;
+}
+
+let msgTimer=null;
+function showMsg(text, color='#fff'){
+  let el=document.getElementById('msg');
+  el.textContent=text; el.style.color=color; el.style.display='block';
+  if(msgTimer) clearTimeout(msgTimer);
+  msgTimer=setTimeout(()=>el.style.display='none',800);
+}
+
+function gameOver(){
+  running=false;
+  document.exitPointerLock?.();
+  let el=document.getElementById('msg');
+  el.textContent='YOU HAVE FALLEN'; el.style.color='#ff4444'; el.style.display='block';
+  setTimeout(()=>{ location.reload(); },3000);
+}
+
+function winGame(){
+  if(!running) return;
+  running=false;
+  document.exitPointerLock?.();
+  let el=document.getElementById('msg');
+  el.textContent='✦ VICTORY ✦  SCORE: '+score; el.style.color=playerColor; el.style.display='block';
+  setTimeout(()=>{ location.reload(); },4000);
+}
+</script>
+</body>
+</html>

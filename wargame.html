@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IRON SKIES — Strategic Command</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
+
+:root {
+  --bg: #050a0f;
+  --panel: #0a1520;
+  --border: #1a3a5c;
+  --usa: #1a4a8a;
+  --usa-light: #2d7dd2;
+  --usa-glow: #4da6ff;
+  --israel: #1a5c3a;
+  --israel-light: #2db86a;
+  --israel-glow: #00ff88;
+  --islamic: #6b2a0a;
+  --islamic-light: #cc4400;
+  --islamic-glow: #ff6600;
+  --neutral: #2a2a3a;
+  --text: #c8d8e8;
+  --text-dim: #5a7a9a;
+  --red: #ff3344;
+  --gold: #ffd700;
+  --cyan: #00d4ff;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Rajdhani', sans-serif;
+  overflow: hidden;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== HEADER ===== */
+#header {
+  background: linear-gradient(180deg, #000 0%, var(--panel) 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 100;
+}
+
+#header h1 {
+  font-family: 'Orbitron', monospace;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 6px;
+  color: var(--cyan);
+  text-shadow: 0 0 20px var(--cyan);
+}
+
+#header h1 span { color: var(--red); }
+
+.header-center {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+.turn-info {
+  font-family: 'Orbitron', monospace;
+  font-size: 12px;
+  color: var(--gold);
+}
+
+.blink { animation: blink 1s step-end infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ===== MAIN LAYOUT ===== */
+#main {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* ===== LEFT PANEL ===== */
+#left-panel {
+  width: 220px;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.panel-section {
+  border-bottom: 1px solid var(--border);
+  padding: 10px;
+}
+
+.panel-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+/* Faction selector */
+.faction-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  cursor: pointer;
+  margin-bottom: 4px;
+  transition: all 0.2s;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+}
+
+.faction-btn:hover { background: rgba(255,255,255,0.05); }
+
+.faction-btn.active-usa { border-color: var(--usa-light); background: rgba(26,74,138,0.3); }
+.faction-btn.active-israel { border-color: var(--israel-light); background: rgba(26,92,58,0.3); }
+.faction-btn.active-iran { border-color: var(--islamic-light); background: rgba(107,42,10,0.3); }
+
+.faction-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dot-usa { background: var(--usa-light); box-shadow: 0 0 6px var(--usa-glow); }
+.dot-israel { background: var(--israel-light); box-shadow: 0 0 6px var(--israel-glow); }
+.dot-iran { background: var(--islamic-light); box-shadow: 0 0 6px var(--islamic-glow); }
+
+.faction-name {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.faction-sub {
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+/* Resource bars */
+.resource-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.resource-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  width: 70px;
+}
+
+.resource-bar-wrap {
+  flex: 1;
+  height: 6px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 1px;
+  margin: 0 6px;
+  overflow: hidden;
+}
+
+.resource-bar {
+  height: 100%;
+  border-radius: 1px;
+  transition: width 0.5s;
+}
+
+.bar-money { background: var(--gold); }
+.bar-missiles { background: var(--red); }
+.bar-jets { background: var(--cyan); }
+.bar-defense { background: #44ff88; }
+
+.resource-val {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--text);
+  width: 28px;
+  text-align: right;
+}
+
+/* Build menu */
+.build-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  margin-bottom: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.build-item:hover {
+  background: rgba(0,212,255,0.07);
+  border-color: var(--cyan);
+}
+
+.build-item:active { transform: scale(0.98); }
+
+.build-icon { font-size: 16px; }
+
+.build-info { flex: 1; margin-left: 8px; }
+.build-name { font-size: 12px; font-weight: 600; }
+.build-cost { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--gold); }
+
+.build-btn {
+  font-family: 'Orbitron', monospace;
+  font-size: 8px;
+  padding: 3px 6px;
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.build-btn:hover { background: var(--cyan); color: #000; }
+
+/* ===== MAP AREA ===== */
+#map-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #060d14;
+}
+
+#game-map {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* Grid overlay */
+#game-map::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,100,200,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,100,200,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Scanline */
+#game-map::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px);
+  pointer-events: none;
+  z-index: 99;
+}
+
+svg#map-svg {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0; left: 0;
+}
+
+/* Region styles */
+.region {
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+
+.region:hover { filter: brightness(1.4); }
+.region.selected { filter: brightness(1.6) drop-shadow(0 0 8px white); }
+
+.region-usa { fill: #1a3a6a; stroke: #2d6ab0; stroke-width: 1.5; }
+.region-israel { fill: #1a4a2a; stroke: #2d8a50; stroke-width: 1.5; }
+.region-iran { fill: #5a1a0a; stroke: #aa3300; stroke-width: 1.5; }
+.region-neutral { fill: #1a1a2a; stroke: #333355; stroke-width: 1; }
+.region-sea { fill: #060d18; stroke: #0a1a30; stroke-width: 0.5; }
+.region-contested { fill: #3a2a0a; stroke: #aa6600; stroke-width: 1.5; animation: contested-pulse 2s ease-in-out infinite; }
+
+@keyframes contested-pulse {
+  0%, 100% { fill: #3a2a0a; }
+  50% { fill: #4a3a1a; }
+}
+
+/* Unit markers */
+.unit-marker {
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.unit-marker:hover { transform: scale(1.3); }
+
+/* Missile trails */
+.missile-trail {
+  stroke-dasharray: 8 4;
+  animation: trail-move 0.5s linear infinite;
+}
+@keyframes trail-move {
+  to { stroke-dashoffset: -12; }
+}
+
+/* Explosion */
+.explosion {
+  animation: explode 0.6s ease-out forwards;
+  transform-origin: center;
+}
+@keyframes explode {
+  0% { opacity: 1; r: 5; }
+  50% { opacity: 0.8; r: 20; }
+  100% { opacity: 0; r: 30; }
+}
+
+/* Labels */
+.map-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  fill: rgba(200,220,240,0.7);
+  pointer-events: none;
+  text-anchor: middle;
+}
+
+.map-label-big {
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  fill: rgba(200,220,240,0.9);
+  font-weight: 700;
+  pointer-events: none;
+  text-anchor: middle;
+}
+
+/* ===== RIGHT PANEL ===== */
+#right-panel {
+  width: 220px;
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+/* Intel log */
+#intel-log {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.log-entry {
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  animation: log-in 0.3s ease;
+}
+
+@keyframes log-in {
+  from { opacity: 0; transform: translateX(10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.log-time { color: var(--text-dim); }
+.log-usa { color: var(--usa-glow); }
+.log-israel { color: var(--israel-glow); }
+.log-iran { color: var(--islamic-glow); }
+.log-event { color: var(--gold); }
+.log-warn { color: var(--red); }
+
+/* Minimap */
+#minimap {
+  width: 200px;
+  height: 120px;
+  background: #040810;
+  border: 1px solid var(--border);
+  margin: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Alert banner */
+#alert-banner {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255,50,50,0.9);
+  border: 2px solid #ff0000;
+  color: white;
+  font-family: 'Orbitron', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 8px 24px;
+  z-index: 200;
+  letter-spacing: 3px;
+  display: none;
+  animation: alert-pulse 0.5s ease-in-out infinite;
+  box-shadow: 0 0 30px rgba(255,0,0,0.5);
+}
+
+@keyframes alert-pulse {
+  0%, 100% { box-shadow: 0 0 30px rgba(255,0,0,0.5); }
+  50% { box-shadow: 0 0 60px rgba(255,0,0,0.9); }
+}
+
+/* ===== BOTTOM BAR ===== */
+#bottom-bar {
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+  padding: 6px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+  font-size: 11px;
+}
+
+.action-btn {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  padding: 5px 14px;
+  border: 1px solid;
+  background: transparent;
+  cursor: pointer;
+  letter-spacing: 2px;
+  transition: all 0.15s;
+  text-transform: uppercase;
+}
+
+.btn-red { border-color: var(--red); color: var(--red); }
+.btn-red:hover { background: var(--red); color: #000; box-shadow: 0 0 15px var(--red); }
+.btn-cyan { border-color: var(--cyan); color: var(--cyan); }
+.btn-cyan:hover { background: var(--cyan); color: #000; box-shadow: 0 0 15px var(--cyan); }
+.btn-gold { border-color: var(--gold); color: var(--gold); }
+.btn-gold:hover { background: var(--gold); color: #000; }
+
+.status-chip {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+
+/* Aid popup */
+#aid-popup {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  background: linear-gradient(135deg, #0a1520, #0f2030);
+  border: 2px solid var(--gold);
+  padding: 20px 30px;
+  z-index: 300;
+  min-width: 300px;
+  display: none;
+  box-shadow: 0 0 50px rgba(255,215,0,0.2);
+}
+
+#aid-popup h3 {
+  font-family: 'Orbitron', monospace;
+  color: var(--gold);
+  font-size: 14px;
+  letter-spacing: 3px;
+  margin-bottom: 12px;
+}
+
+#aid-popup p {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+#aid-close {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  padding: 5px 20px;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  background: transparent;
+  cursor: pointer;
+  float: right;
+}
+
+#aid-close:hover { background: var(--gold); color: #000; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #000; }
+::-webkit-scrollbar-thumb { background: var(--border); }
+
+/* Mode overlay */
+#mode-select {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.9);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 20px;
+}
+
+#mode-select h1 {
+  font-family: 'Orbitron', monospace;
+  font-size: 36px;
+  font-weight: 900;
+  color: var(--cyan);
+  text-shadow: 0 0 40px var(--cyan);
+  letter-spacing: 8px;
+  margin-bottom: 10px;
+}
+
+#mode-select .subtitle {
+  font-family: 'Share Tech Mono', monospace;
+  color: var(--text-dim);
+  font-size: 13px;
+  letter-spacing: 4px;
+  margin-bottom: 30px;
+}
+
+.mode-card {
+  border: 1px solid var(--border);
+  padding: 16px 40px;
+  cursor: pointer;
+  font-family: 'Orbitron', monospace;
+  font-size: 14px;
+  letter-spacing: 4px;
+  transition: all 0.2s;
+  width: 320px;
+  text-align: center;
+}
+
+.mode-card:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: rgba(0,212,255,0.05);
+  box-shadow: 0 0 20px rgba(0,212,255,0.1);
+}
+
+.mode-sub {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  letter-spacing: 1px;
+}
+
+.faction-select-row {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+}
+
+.faction-card {
+  border: 1px solid var(--border);
+  padding: 12px 20px;
+  cursor: pointer;
+  text-align: center;
+  width: 140px;
+  transition: all 0.2s;
+}
+
+.faction-card:hover { transform: translateY(-2px); }
+.fc-usa:hover { border-color: var(--usa-glow); box-shadow: 0 0 20px rgba(77,166,255,0.2); }
+.fc-israel:hover { border-color: var(--israel-glow); box-shadow: 0 0 20px rgba(0,255,136,0.2); }
+.fc-iran:hover { border-color: var(--islamic-glow); box-shadow: 0 0 20px rgba(255,102,0,0.2); }
+
+.fc-flag { font-size: 28px; margin-bottom: 6px; }
+.fc-name { font-family: 'Orbitron', monospace; font-size: 11px; font-weight: 700; }
+.fc-desc { font-size: 10px; color: var(--text-dim); margin-top: 4px; }
+
+</style>
+</head>
+<body>
+
+<!-- Mode Select Screen -->
+<div id="mode-select">
+  <h1>IRON SKIES</h1>
+  <div class="subtitle">STRATEGIC COMMAND — MIDDLE EAST THEATER</div>
+  
+  <div id="mode-step-1">
+    <div style="display:flex; flex-direction:column; gap:10px; align-items:center">
+      <div class="mode-card" onclick="selectMode('multiplayer')">
+        MULTIPLAYER
+        <div class="mode-sub">Challenge real commanders online</div>
+      </div>
+      <div class="mode-card" onclick="selectMode('demo')">
+        DEMO / AI BATTLE
+        <div class="mode-sub">Watch AI factions fight in the UAE–Iran theater</div>
+      </div>
+      <div class="mode-card" onclick="selectMode('single')">
+        SINGLE PLAYER
+        <div class="mode-sub">Choose your faction, fight the AI</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="mode-step-2" style="display:none; text-align:center">
+    <div style="font-family:'Orbitron',monospace; font-size:12px; color:var(--text-dim); letter-spacing:3px; margin-bottom:16px">SELECT YOUR FACTION</div>
+    <div class="faction-select-row">
+      <div class="faction-card fc-usa" onclick="startGame('USA')">
+        <div class="fc-flag">🇺🇸</div>
+        <div class="fc-name" style="color:#4da6ff">USA / ISRAEL</div>
+        <div class="fc-desc">Tomahawks · F-35s<br>Iron Dome · Carrier Group</div>
+      </div>
+      <div class="faction-card fc-israel" onclick="startGame('ISRAEL')">
+        <div class="fc-flag">🇮🇱</div>
+        <div class="fc-name" style="color:#00ff88">ISRAEL IDF</div>
+        <div class="fc-desc">Arrow-3 · F-16s<br>Mossad Intel · Bunker Busters</div>
+      </div>
+      <div class="faction-card fc-iran" onclick="startGame('IRAN')">
+        <div class="fc-flag">🇮🇷</div>
+        <div class="fc-name" style="color:#ff6600">IRAN / AXIS</div>
+        <div class="fc-desc">Shaheds · S-300<br>Houthi Proxies · Hezbollah</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Game UI -->
+<div id="header">
+  <h1>IRON <span>SKIES</span></h1>
+  <div class="header-center">
+    THEATER: UAE–IRAN · <span id="turn-label" style="color:var(--cyan)">TURN 1</span> · 
+    <span id="phase-label" style="color:var(--gold)">PLANNING</span>
+    <br>CONFLICT STATUS: <span class="blink" style="color:var(--red)">● ACTIVE</span>
+  </div>
+  <div class="turn-info" id="player-faction-display">—</div>
+</div>
+
+<div id="main">
+  <!-- LEFT PANEL -->
+  <div id="left-panel">
+    <div class="panel-section">
+      <div class="panel-title">Active Factions</div>
+      <div class="faction-btn" id="fac-usa" onclick="selectFaction('USA')">
+        <div class="faction-dot dot-usa"></div>
+        <div>
+          <div class="faction-name" style="color:var(--usa-glow)">USA/ISRAEL</div>
+          <div class="faction-sub">Western Alliance</div>
+        </div>
+      </div>
+      <div class="faction-btn" id="fac-iran" onclick="selectFaction('IRAN')">
+        <div class="faction-dot dot-iran"></div>
+        <div>
+          <div class="faction-name" style="color:var(--islamic-glow)">IRAN AXIS</div>
+          <div class="faction-sub">Resistance Bloc</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-title">Your Resources</div>
+      <div class="resource-row">
+        <div class="resource-label">💰 Budget</div>
+        <div class="resource-bar-wrap"><div class="resource-bar bar-money" id="bar-money" style="width:70%"></div></div>
+        <div class="resource-val" id="val-money">700</div>
+      </div>
+      <div class="resource-row">
+        <div class="resource-label">🚀 Missiles</div>
+        <div class="resource-bar-wrap"><div class="resource-bar bar-missiles" id="bar-missiles" style="width:50%"></div></div>
+        <div class="resource-val" id="val-missiles">12</div>
+      </div>
+      <div class="resource-row">
+        <div class="resource-label">✈️ Jets</div>
+        <div class="resource-bar-wrap"><div class="resource-bar bar-jets" id="bar-jets" style="width:60%"></div></div>
+        <div class="resource-val" id="val-jets">6</div>
+      </div>
+      <div class="resource-row">
+        <div class="resource-label">🛡️ Defense</div>
+        <div class="resource-bar-wrap"><div class="resource-bar bar-defense" id="bar-defense" style="width:40%"></div></div>
+        <div class="resource-val" id="val-defense">4</div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-title">Build & Deploy</div>
+      <div class="build-item" onclick="build('missile')">
+        <div class="build-icon">🚀</div>
+        <div class="build-info">
+          <div class="build-name">Ballistic Missile</div>
+          <div class="build-cost">$80M</div>
+        </div>
+        <button class="build-btn">BUILD</button>
+      </div>
+      <div class="build-item" onclick="build('fighter')">
+        <div class="build-icon">✈️</div>
+        <div class="build-info">
+          <div class="build-name">Fighter Squadron</div>
+          <div class="build-cost">$120M</div>
+        </div>
+        <button class="build-btn">BUILD</button>
+      </div>
+      <div class="build-item" onclick="build('anti')">
+        <div class="build-icon">🛡️</div>
+        <div class="build-info">
+          <div class="build-name">Anti-Missile Battery</div>
+          <div class="build-cost">$150M</div>
+        </div>
+        <button class="build-btn">BUILD</button>
+      </div>
+      <div class="build-item" onclick="build('drone')">
+        <div class="build-icon">🤖</div>
+        <div class="build-info">
+          <div class="build-name">Drone Swarm</div>
+          <div class="build-cost">$40M</div>
+        </div>
+        <button class="build-btn">BUILD</button>
+      </div>
+      <div class="build-item" onclick="build('carrier')">
+        <div class="build-icon">🚢</div>
+        <div class="build-info">
+          <div class="build-name">Carrier Strike Group</div>
+          <div class="build-cost">$300M</div>
+        </div>
+        <button class="build-btn">BUILD</button>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-title">Allied Support</div>
+      <div style="font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--text-dim); line-height:1.8">
+        <div>🇸🇦 Saudi Arabia: <span style="color:var(--gold)">NEUTRAL</span></div>
+        <div>🇪🇺 Europe: <span style="color:var(--usa-glow)">+$200M/turn</span></div>
+        <div>🇷🇺 Russia: <span style="color:var(--islamic-glow)">Supplying Iran</span></div>
+        <div>🇨🇳 China: <span style="color:var(--text-dim)">Observing</span></div>
+        <div>🇶🇦 Qatar: <span style="color:var(--gold)">Mediating</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAP -->
+  <div id="map-container">
+    <div id="alert-banner">⚠ MISSILE LAUNCH DETECTED ⚠</div>
+    
+    <div id="aid-popup">
+      <h3>🌍 INTERNATIONAL AID</h3>
+      <p id="aid-text">Loading...</p>
+      <button id="aid-close" onclick="closeAid()">ACKNOWLEDGE</button>
+    </div>
+
+    <div id="game-map">
+      <svg id="map-svg" viewBox="0 0 900 580">
+        <!-- OCEAN / BACKGROUND -->
+        <rect width="900" height="580" fill="#060d14"/>
+        
+        <!-- PERSIAN GULF -->
+        <ellipse cx="560" cy="310" rx="80" ry="30" fill="#081828" stroke="#0a2040" stroke-width="0.5"/>
+        <text x="560" y="314" class="map-label" style="fill:#1a4060">PERSIAN GULF</text>
+        
+        <!-- RED SEA -->
+        <path d="M 280 200 Q 310 280 320 380 Q 300 400 280 420 Q 250 390 240 320 Z" 
+              fill="#081828" stroke="#0a2040" stroke-width="0.5"/>
+        <text x="285" y="310" class="map-label" style="fill:#1a4060">RED SEA</text>
+        
+        <!-- MEDITERRANEAN -->
+        <ellipse cx="240" cy="130" rx="120" ry="50" fill="#081828" stroke="#0a2040" stroke-width="0.5"/>
+        <text x="240" y="133" class="map-label" style="fill:#1a4060">MEDITERRANEAN</text>
+        
+        <!-- ARABIAN SEA -->
+        <ellipse cx="620" cy="430" rx="120" ry="70" fill="#081828" stroke="#0a2040" stroke-width="0.5"/>
+        <text x="620" y="434" class="map-label" style="fill:#1a4060">ARABIAN SEA</text>
+
+        <!-- GULF OF OMAN -->
+        <ellipse cx="640" cy="355" rx="60" ry="25" fill="#081020"/>
+        <text x="640" y="358" class="map-label" style="fill:#0a2030;font-size:7px">GULF OF OMAN</text>
+
+        <!-- === REGIONS === -->
+        
+        <!-- IRAN (Islamic) -->
+        <path id="r-iran" class="region region-iran" 
+              d="M 580 120 L 700 110 L 760 150 L 790 200 L 780 260 L 760 290 L 700 300 L 640 290 L 590 270 L 570 230 L 560 190 Z"
+              onclick="selectRegion('iran')" data-region="iran" data-faction="iran"/>
+        <text x="680" y="210" class="map-label-big" style="fill:#ff9966">🇮🇷</text>
+        <text x="680" y="224" class="map-label">IRAN</text>
+        
+        <!-- IRAQ -->
+        <path id="r-iraq" class="region region-iran"
+              d="M 480 150 L 580 120 L 560 190 L 570 230 L 540 260 L 500 270 L 470 240 L 460 200 Z"
+              onclick="selectRegion('iraq')" data-region="iraq" data-faction="iran"/>
+        <text x="520" y="200" class="map-label">IRAQ</text>
+        
+        <!-- UAE (contested start) -->
+        <path id="r-uae" class="region region-contested"
+              d="M 620 290 L 660 300 L 680 320 L 670 350 L 640 360 L 610 345 L 600 320 Z"
+              onclick="selectRegion('uae')" data-region="uae" data-faction="neutral"/>
+        <text x="640" y="323" class="map-label" style="font-size:8px">🇦🇪 UAE</text>
+        
+        <!-- SAUDI ARABIA (neutral) -->
+        <path id="r-saudi" class="region region-neutral"
+              d="M 400 270 L 500 270 L 540 260 L 590 270 L 600 320 L 610 345 L 580 380 L 520 400 L 440 390 L 390 350 L 380 300 Z"
+              onclick="selectRegion('saudi')" data-region="saudi" data-faction="neutral"/>
+        <text x="490" y="330" class="map-label">🇸🇦 SAUDI ARABIA</text>
+        
+        <!-- ISRAEL (Israel/USA) -->
+        <path id="r-israel" class="region region-israel"
+              d="M 330 200 L 360 190 L 375 220 L 365 255 L 345 260 L 325 245 L 320 220 Z"
+              onclick="selectRegion('israel')" data-region="israel" data-faction="usa"/>
+        <text x="348" y="228" class="map-label" style="font-size:8px">🇮🇱 ISR</text>
+
+        <!-- JORDAN -->
+        <path id="r-jordan" class="region region-neutral"
+              d="M 360 190 L 400 185 L 420 210 L 410 250 L 375 260 L 365 255 L 375 220 Z"
+              onclick="selectRegion('jordan')" data-region="jordan" data-faction="neutral"/>
+        <text x="392" y="225" class="map-label" style="font-size:8px">JORDAN</text>
+        
+        <!-- EGYPT -->
+        <path id="r-egypt" class="region region-neutral"
+              d="M 200 180 L 310 175 L 330 200 L 320 220 L 325 245 L 290 270 L 250 280 L 210 250 L 195 210 Z"
+              onclick="selectRegion('egypt')" data-region="egypt" data-faction="neutral"/>
+        <text x="262" y="228" class="map-label">🇪🇬 EGYPT</text>
+        
+        <!-- TURKEY -->
+        <path id="r-turkey" class="region region-neutral"
+              d="M 350 80 L 480 70 L 510 100 L 520 130 L 490 140 L 460 145 L 400 145 L 360 130 Z"
+              onclick="selectRegion('turkey')" data-region="turkey" data-faction="neutral"/>
+        <text x="435" y="112" class="map-label">🇹🇷 TURKEY</text>
+        
+        <!-- SYRIA/LEBANON (contested) -->
+        <path id="r-syria" class="region region-iran"
+              d="M 360 130 L 400 145 L 420 170 L 400 185 L 360 190 L 330 200 L 310 175 L 320 145 L 340 130 Z"
+              onclick="selectRegion('syria')" data-region="syria" data-faction="iran"/>
+        <text x="368" y="163" class="map-label" style="font-size:8px">SYR/LBN</text>
+        
+        <!-- PAKISTAN (Islamic) -->
+        <path id="r-pakistan" class="region region-iran"
+              d="M 760 150 L 830 130 L 860 160 L 860 220 L 830 250 L 790 260 L 780 200 Z"
+              onclick="selectRegion('pakistan')" data-region="pakistan" data-faction="iran"/>
+        <text x="812" y="195" class="map-label">🇵🇰 PAK</text>
+
+        <!-- AFGHANISTAN -->
+        <path id="r-afghanistan" class="region region-neutral"
+              d="M 760 110 L 830 130 L 780 200 L 760 200 L 760 150 Z"
+              onclick="selectRegion('afghanistan')" data-region="afghanistan" data-faction="neutral"/>
+        <text x="785" y="158" class="map-label" style="font-size:7px">AFG</text>
+        
+        <!-- OMAN -->
+        <path id="r-oman" class="region region-neutral"
+              d="M 670 350 L 700 300 L 750 310 L 760 360 L 740 400 L 700 420 L 670 400 L 660 370 Z"
+              onclick="selectRegion('oman')" data-region="oman" data-faction="neutral"/>
+        <text x="710" y="365" class="map-label" style="font-size:8px">OMAN</text>
+
+        <!-- QATAR/BAHRAIN small -->
+        <rect x="598" y="338" width="14" height="12" class="region region-usa" rx="1"
+              onclick="selectRegion('qatar')" data-region="qatar" data-faction="usa"/>
+        <text x="605" y="348" class="map-label" style="font-size:7px">QAT</text>
+
+        <!-- KUWAIT -->
+        <path d="M 570 250 L 595 245 L 600 265 L 578 270 Z"
+              class="region region-neutral" onclick="selectRegion('kuwait')" data-region="kuwait" data-faction="neutral"/>
+        <text x="584" y="258" class="map-label" style="font-size:7px">KWT</text>
+
+        <!-- YEMEN (Houthi / Iran proxy) -->
+        <path id="r-yemen" class="region region-iran"
+              d="M 380 350 L 440 390 L 440 430 L 400 450 L 360 440 L 340 410 L 350 380 Z"
+              onclick="selectRegion('yemen')" data-region="yemen" data-faction="iran"/>
+        <text x="395" y="410" class="map-label">🇾🇪 YEMEN</text>
+        <text x="395" y="422" class="map-label" style="font-size:7px;fill:#ff6600">HOUTHI</text>
+
+        <!-- Libya -->
+        <path d="M 100 150 L 210 140 L 200 180 L 195 210 L 150 220 L 90 210 Z"
+              class="region region-neutral" onclick="selectRegion('libya')" data-region="libya" data-faction="neutral"/>
+        <text x="153" y="182" class="map-label" style="font-size:8px">LIBYA</text>
+
+        <!-- US Navy carrier in Gulf -->
+        <g class="unit-marker" id="unit-carrier" onclick="selectUnit('carrier')">
+          <circle cx="570" cy="330" r="8" fill="rgba(30,90,180,0.8)" stroke="#4da6ff" stroke-width="1.5"/>
+          <text x="570" y="334" text-anchor="middle" style="font-size:10px;fill:white">🚢</text>
+        </g>
+
+        <!-- US F-35 patrol over UAE -->
+        <g class="unit-marker" id="unit-f35" onclick="selectUnit('f35')">
+          <circle cx="630" cy="298" r="7" fill="rgba(30,90,180,0.7)" stroke="#4da6ff" stroke-width="1.5"/>
+          <text x="630" y="302" text-anchor="middle" style="font-size:9px;fill:white">✈️</text>
+        </g>
+
+        <!-- Iron Dome over Israel -->
+        <g class="unit-marker" id="unit-dome" onclick="selectUnit('dome')">
+          <circle cx="345" cy="232" r="7" fill="rgba(20,80,50,0.8)" stroke="#00ff88" stroke-width="1.5"/>
+          <text x="345" y="236" text-anchor="middle" style="font-size:9px;fill:white">🛡️</text>
+        </g>
+
+        <!-- Iran missile battery in Bandar Abbas -->
+        <g class="unit-marker" id="unit-irbm" onclick="selectUnit('irbm')">
+          <circle cx="680" cy="278" r="7" fill="rgba(120,30,10,0.8)" stroke="#ff6600" stroke-width="1.5"/>
+          <text x="680" y="282" text-anchor="middle" style="font-size:9px;fill:white">🚀</text>
+        </g>
+
+        <!-- Iran S-300 air defense -->
+        <g class="unit-marker" id="unit-s300" onclick="selectUnit('s300')">
+          <circle cx="700" cy="240" r="7" fill="rgba(120,30,10,0.8)" stroke="#ff6600" stroke-width="1.5"/>
+          <text x="700" y="244" text-anchor="middle" style="font-size:9px;fill:white">🛡️</text>
+        </g>
+
+        <!-- Houthi drone unit in Yemen -->
+        <g class="unit-marker" id="unit-houthi" onclick="selectUnit('houthi')">
+          <circle cx="390" cy="405" r="7" fill="rgba(120,30,10,0.8)" stroke="#ff6600" stroke-width="1.5"/>
+          <text x="390" y="409" text-anchor="middle" style="font-size:9px;fill:white">🤖</text>
+        </g>
+
+        <!-- Dynamic elements container -->
+        <g id="dynamic-layer"></g>
+
+        <!-- Conflict zone marker - UAE -->
+        <circle cx="640" cy="320" r="20" fill="none" stroke="#ff6600" stroke-width="1" opacity="0.5"
+                style="animation: contested-pulse 1.5s ease-in-out infinite"/>
+        <circle cx="640" cy="320" r="30" fill="none" stroke="#ff6600" stroke-width="0.5" opacity="0.3"
+                style="animation: contested-pulse 1.5s ease-in-out infinite; animation-delay:0.5s"/>
+
+        <!-- Legend -->
+        <rect x="12" y="480" width="160" height="90" fill="rgba(5,15,25,0.85)" stroke="#1a3a5c" stroke-width="1" rx="2"/>
+        <text x="22" y="496" style="font-family:'Orbitron',monospace;font-size:7px;fill:#5a7a9a;letter-spacing:2px">LEGEND</text>
+        <rect x="22" y="502" width="10" height="8" fill="#1a3a6a" stroke="#2d6ab0" stroke-width="1"/>
+        <text x="36" y="510" class="map-label">USA/ISRAEL</text>
+        <rect x="22" y="515" width="10" height="8" fill="#1a4a2a" stroke="#2d8a50" stroke-width="1"/>
+        <text x="36" y="523" class="map-label">IRAN/PROXIES</text>
+        <rect x="22" y="528" width="10" height="8" fill="#1a1a2a" stroke="#333355" stroke-width="1"/>
+        <text x="36" y="536" class="map-label">NEUTRAL</text>
+        <rect x="22" y="541" width="10" height="8" fill="#3a2a0a" stroke="#aa6600" stroke-width="1"/>
+        <text x="36" y="549" class="map-label">CONTESTED</text>
+        <circle cx="27" cy="557" r="5" fill="rgba(30,90,180,0.8)" stroke="#4da6ff" stroke-width="1"/>
+        <text x="36" y="561" class="map-label">UNIT MARKER</text>
+
+        <!-- Compass -->
+        <g transform="translate(855, 50)">
+          <circle r="20" fill="rgba(5,15,25,0.7)" stroke="#1a3a5c" stroke-width="1"/>
+          <text y="-8" text-anchor="middle" style="font-family:'Share Tech Mono',monospace;font-size:10px;fill:#4da6ff">N</text>
+          <text y="14" text-anchor="middle" style="font-family:'Share Tech Mono',monospace;font-size:8px;fill:#5a7a9a">S</text>
+          <text x="-13" y="4" text-anchor="middle" style="font-family:'Share Tech Mono',monospace;font-size:8px;fill:#5a7a9a">W</text>
+          <text x="13" y="4" text-anchor="middle" style="font-family:'Share Tech Mono',monospace;font-size:8px;fill:#5a7a9a">E</text>
+          <line y1="-12" y2="-4" stroke="#4da6ff" stroke-width="2"/>
+          <line y1="4" y2="12" stroke="#5a7a9a" stroke-width="1"/>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div id="right-panel">
+    <div class="panel-section">
+      <div class="panel-title">Region Intel</div>
+      <div id="region-detail" style="font-family:'Share Tech Mono',monospace; font-size:10px; line-height:1.8; color:var(--text-dim)">
+        Click a region to<br>view intel...
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-title">Combat Log</div>
+      <div id="intel-log">
+        <div class="log-entry"><span class="log-time">[00:00]</span> <span class="log-event">THEATER ACTIVATED: UAE-IRAN</span></div>
+        <div class="log-entry"><span class="log-time">[00:01]</span> <span class="log-usa">USA: Carrier Ronald Reagan deployed Persian Gulf</span></div>
+        <div class="log-entry"><span class="log-time">[00:02]</span> <span class="log-iran">IRAN: IRGC placed on DEFCON 2</span></div>
+        <div class="log-entry"><span class="log-time">[00:03]</span> <span class="log-israel">ISRAEL: F-35s scrambled over Jordan airspace</span></div>
+        <div class="log-entry"><span class="log-time">[00:04]</span> <span class="log-event">HOUTHIS: Cruise missile fired toward UAE coast</span></div>
+        <div class="log-entry"><span class="log-time">[00:05]</span> <span class="log-usa">PATRIOT BATTERY: Intercept — 1/1 success</span></div>
+        <div class="log-entry"><span class="log-time">[00:06]</span> <span class="log-iran">IRAN: Shahed drones launched — 12 inbound</span></div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-title">Theater Score</div>
+      <div style="font-family:'Share Tech Mono',monospace; font-size:11px; line-height:2">
+        <div style="color:var(--usa-glow)">🇺🇸 USA/Israel:  <span id="score-usa">1,240</span></div>
+        <div style="color:var(--islamic-glow)">🇮🇷 Iran Axis:  <span id="score-iran">980</span></div>
+        <br>
+        <div style="color:var(--text-dim); font-size:9px">NEXT AID DROP: <span id="aid-timer" style="color:var(--gold)">14s</span></div>
+        <div style="color:var(--text-dim); font-size:9px">TURN ENDS IN: <span id="turn-timer" style="color:var(--red)">45s</span></div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-title">Random Events</div>
+      <div id="event-log" style="font-family:'Share Tech Mono',monospace; font-size:9px; line-height:1.8; color:var(--text-dim)">
+        Awaiting events...
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM BAR -->
+<div id="bottom-bar">
+  <button class="action-btn btn-red" onclick="launchMissile()">🚀 LAUNCH STRIKE</button>
+  <button class="action-btn btn-cyan" onclick="scrambleJets()">✈️ SCRAMBLE JETS</button>
+  <button class="action-btn btn-gold" onclick="activateDefense()">🛡️ ACTIVATE DEFENSE</button>
+  <button class="action-btn btn-cyan" onclick="endTurn()">⏭ END TURN</button>
+  <div class="status-chip" id="selected-region-chip">No region selected</div>
+  <div class="status-chip" id="mode-chip">MODE: —</div>
+  <div style="flex:1"></div>
+  <div style="font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--text-dim)">
+    MULTIPLAYER: <span style="color:var(--usa-glow)">3 ONLINE</span> &nbsp;|&nbsp;
+    SERVER: <span style="color:#44ff44">CONNECTED</span>
+  </div>
+</div>
+
+<script>
+// ============ GAME STATE ============
+const state = {
+  playerFaction: null,
+  mode: null,
+  turn: 1,
+  phase: 'Planning',
+  selectedRegion: null,
+  resources: {
+    USA: { money: 700, missiles: 12, jets: 6, defense: 4 },
+    IRAN: { money: 500, missiles: 20, jets: 8, defense: 6 }
+  },
+  scores: { USA: 1240, IRAN: 980 },
+  aidTimer: 14,
+  turnTimer: 45,
+  demoRunning: false
+};
+
+const regionData = {
+  iran: { name: 'Iran', faction: 'iran', units: ['S-300 Battery x3', 'IRBM Battery x5', 'Su-35 Squadron x2'], pop: '85M', threat: 'CRITICAL' },
+  uae: { name: 'UAE', faction: 'neutral', units: ['THAAD Battery x2', 'F-16 Squadron x1'], pop: '9.7M', threat: 'HIGH — CONTESTED' },
+  israel: { name: 'Israel', faction: 'usa', units: ['Iron Dome x8', 'F-35 Squadron x3', 'Arrow-3 x4'], pop: '9.5M', threat: 'DEFENDED' },
+  saudi: { name: 'Saudi Arabia', faction: 'neutral', units: ['Patriot PAC-3 x6'], pop: '35M', threat: 'MONITORING' },
+  iraq: { name: 'Iraq', faction: 'iran', units: ['Militia forces x12', 'Drone cell x4'], pop: '40M', threat: 'HIGH' },
+  yemen: { name: 'Yemen/Houthi', faction: 'iran', units: ['Shahed drones x30', 'Anti-ship missiles x8'], pop: '33M', threat: 'ACTIVE LAUNCH' },
+  syria: { name: 'Syria/Lebanon', faction: 'iran', units: ['Hezbollah rocket cells x20', 'Iranian IRGC advisors'], pop: '21M', threat: 'HIGH' },
+  qatar: { name: 'Qatar', faction: 'usa', units: ['US Central Command HQ', 'F-15E Squadron x2'], pop: '2.9M', threat: 'BASE SECURE' },
+  pakistan: { name: 'Pakistan', faction: 'iran', units: ['Missile arsenal — monitoring', 'ISI intel sharing'], pop: '231M', threat: 'NEUTRAL-HOSTILE' },
+  turkey: { name: 'Turkey', faction: 'neutral', units: ['NATO-aligned but observing', 'Bayraktar drones available'], pop: '84M', threat: 'NEUTRAL' },
+  egypt: { name: 'Egypt', faction: 'neutral', units: ['Suez Canal Control', 'Air Force monitoring'], pop: '104M', threat: 'LOW' },
+  oman: { name: 'Oman', faction: 'neutral', units: ['Strait of Hormuz control', 'Western intelligence'], pop: '4.5M', threat: 'STRATEGIC' },
+};
+
+const randomEvents = [
+  { text: '🇪🇺 EU pledges +$300M emergency military aid to Israel', faction: 'USA' },
+  { text: '🇷🇺 Russia accelerates S-400 delivery to Iran', faction: 'IRAN' },
+  { text: '🇸🇦 Saudi Arabia joins ceasefire mediation', faction: 'NEUTRAL' },
+  { text: '🇨🇳 China offers to broker peace talks', faction: 'NEUTRAL' },
+  { text: '🛢️ Oil prices spike — Iran gains $400M windfall', faction: 'IRAN' },
+  { text: '🇺🇸 US Congress approves emergency $2B defense package', faction: 'USA' },
+  { text: '📡 Iranian radar jammed — 30% reduced intercept rate', faction: 'USA' },
+  { text: '⛴️ Strait of Hormuz threatened — shipping halted', faction: 'IRAN' },
+  { text: '🇮🇱 Israel-Jordan emergency treaty activated', faction: 'USA' },
+  { text: '☢️ IAEA reports unusual activity at Fordow enrichment site', faction: 'IRAN' },
+  { text: '🤝 Qatar brokers prisoner exchange deal', faction: 'NEUTRAL' },
+  { text: '🛳️ US deploys 2nd carrier strike group — Strait reinforced', faction: 'USA' },
+];
+
+let logTime = 7;
+let aidInterval, turnInterval, eventInterval, demoInterval;
+
+// ============ UI FUNCTIONS ============
+function selectMode(mode) {
+  if (mode === 'demo') {
+    startGame('DEMO');
+    return;
+  }
+  if (mode === 'multiplayer' || mode === 'single') {
+    document.getElementById('mode-step-1').style.display = 'none';
+    document.getElementById('mode-step-2').style.display = 'block';
+  }
+}
+
+function startGame(faction) {
+  document.getElementById('mode-select').style.display = 'none';
+  state.mode = faction === 'DEMO' ? 'demo' : 'single';
+  state.playerFaction = faction === 'DEMO' ? 'USA' : faction;
+  document.getElementById('mode-chip').textContent = 'MODE: ' + (faction === 'DEMO' ? 'AI DEMO' : faction);
+  document.getElementById('player-faction-display').textContent = faction === 'DEMO' ? '⚔ AI DEMO' : '▶ ' + faction;
+  
+  updateResourceBars();
+  startTimers();
+  if (faction === 'DEMO') runDemoAI();
+}
+
+function selectFaction(f) {
+  document.querySelectorAll('.faction-btn').forEach(b => b.className = 'faction-btn');
+  document.getElementById('fac-' + f.toLowerCase()).className = 'faction-btn active-' + f.toLowerCase();
+}
+
+function selectRegion(id) {
+  state.selectedRegion = id;
+  const d = regionData[id];
+  if (!d) return;
+  document.getElementById('selected-region-chip').textContent = '📍 ' + d.name.toUpperCase();
+  document.getElementById('region-detail').innerHTML = `
+    <span style="color:var(--cyan)">${d.name.toUpperCase()}</span><br>
+    Faction: <span style="color:${d.faction === 'usa' ? 'var(--usa-glow)' : d.faction === 'iran' ? 'var(--islamic-glow)' : 'var(--gold)'}">${d.faction.toUpperCase()}</span><br>
+    Pop: ${d.pop}<br>
+    Status: <span style="color:${d.threat.includes('CRITICAL') || d.threat.includes('ACTIVE') ? 'var(--red)' : 'var(--text)'}">${d.threat}</span><br>
+    <br>Units:<br>${d.units.map(u => '• ' + u).join('<br>')}
+  `;
+}
+
+function selectUnit(id) {
+  addLog('sys', 'UNIT ' + id.toUpperCase() + ' — selected for orders');
+}
+
+function updateResourceBars() {
+  const r = state.resources[state.playerFaction] || state.resources.USA;
+  document.getElementById('val-money').textContent = r.money;
+  document.getElementById('val-missiles').textContent = r.missiles;
+  document.getElementById('val-jets').textContent = r.jets;
+  document.getElementById('val-defense').textContent = r.defense;
+  document.getElementById('bar-money').style.width = Math.min(100, r.money/10) + '%';
+  document.getElementById('bar-missiles').style.width = Math.min(100, r.missiles * 4) + '%';
+  document.getElementById('bar-jets').style.width = Math.min(100, r.jets * 10) + '%';
+  document.getElementById('bar-defense').style.width = Math.min(100, r.defense * 8) + '%';
+}
+
+function build(type) {
+  const costs = { missile: 80, fighter: 120, anti: 150, drone: 40, carrier: 300 };
+  const faction = state.playerFaction || 'USA';
+  const r = state.resources[faction];
+  if (!r || r.money < costs[type]) {
+    addLog('warn', 'INSUFFICIENT FUNDS for ' + type);
+    return;
+  }
+  r.money -= costs[type];
+  if (type === 'missile' || type === 'drone') r.missiles += (type === 'drone' ? 3 : 1);
+  if (type === 'fighter') r.jets += 2;
+  if (type === 'anti') r.defense += 2;
+  if (type === 'carrier') { r.jets += 4; r.defense += 3; }
+  updateResourceBars();
+  addLog(faction.toLowerCase(), 'Built: ' + type.toUpperCase() + ' — deployed to ' + (state.selectedRegion || 'staging area').toUpperCase());
+}
+
+function launchMissile() {
+  if (!state.selectedRegion) { addLog('warn', 'SELECT TARGET REGION FIRST'); return; }
+  const faction = state.playerFaction || 'USA';
+  const r = state.resources[faction];
+  if (r.missiles < 1) { addLog('warn', 'NO MISSILES AVAILABLE'); return; }
+  r.missiles--;
+  updateResourceBars();
+  showAlert('⚠ MISSILE LAUNCH DETECTED ⚠');
+  addLog(faction.toLowerCase(), 'STRIKE LAUNCHED → ' + state.selectedRegion.toUpperCase());
+  animateMissile(faction);
+  setTimeout(() => {
+    const hit = Math.random() > 0.3;
+    addLog(hit ? 'event' : 'warn', hit ? '💥 IMPACT confirmed — target degraded' : '🛡️ Intercepted by enemy defense system');
+    if (hit) {
+      state.scores[faction] += 120;
+      updateScores();
+    }
+  }, 1800);
+}
+
+function scrambleJets() {
+  const faction = state.playerFaction || 'USA';
+  const r = state.resources[faction];
+  if (r.jets < 1) { addLog('warn', 'NO JETS AVAILABLE'); return; }
+  r.jets--;
+  r.money -= 30;
+  updateResourceBars();
+  addLog(faction.toLowerCase(), 'JETS SCRAMBLED — air superiority mission active');
+}
+
+function activateDefense() {
+  const faction = state.playerFaction || 'USA';
+  const r = state.resources[faction];
+  if (r.defense < 1) { addLog('warn', 'NO DEFENSE BATTERIES ACTIVE'); return; }
+  addLog(faction.toLowerCase(), '🛡️ DEFENSE ACTIVATED — intercept mode ENABLED');
+}
+
+function endTurn() {
+  state.turn++;
+  document.getElementById('turn-label').textContent = 'TURN ' + state.turn;
+  addLog('event', '═══ TURN ' + state.turn + ' BEGINS ═══');
+  const faction = state.playerFaction || 'USA';
+  state.resources[faction].money += 200;
+  updateResourceBars();
+}
+
+// ============ ANIMATIONS ============
+function animateMissile(faction) {
+  const dyn = document.getElementById('dynamic-layer');
+  const color = faction === 'USA' || faction === 'ISRAEL' ? '#4da6ff' : '#ff6600';
+  
+  // Start/end coords based on faction
+  const sx = faction === 'IRAN' ? 700 : 570;
+  const sy = faction === 'IRAN' ? 240 : 330;
+  const tx = faction === 'IRAN' ? 635 : 700;
+  const ty = faction === 'IRAN' ? 310 : 250;
+  
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line.setAttribute('x1', sx); line.setAttribute('y1', sy);
+  line.setAttribute('x2', sx); line.setAttribute('y2', sy);
+  line.setAttribute('stroke', color);
+  line.setAttribute('stroke-width', '2');
+  line.setAttribute('class', 'missile-trail');
+  line.setAttribute('stroke-dasharray', '8 4');
+  dyn.appendChild(line);
+
+  let t = 0;
+  const anim = setInterval(() => {
+    t += 0.05;
+    if (t >= 1) {
+      clearInterval(anim);
+      // Explosion
+      const exp = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      exp.setAttribute('cx', tx); exp.setAttribute('cy', ty);
+      exp.setAttribute('r', '3');
+      exp.setAttribute('fill', color);
+      exp.setAttribute('class', 'explosion');
+      dyn.appendChild(exp);
+      setTimeout(() => { try { dyn.removeChild(line); dyn.removeChild(exp); } catch(e){} }, 800);
+      return;
+    }
+    const cx = sx + (tx - sx) * t;
+    const cy = sy + (ty - sy) * t - Math.sin(t * Math.PI) * 40;
+    line.setAttribute('x2', cx);
+    line.setAttribute('y2', cy);
+  }, 50);
+}
+
+// ============ DEMO AI ============
+function runDemoAI() {
+  addLog('event', '⚡ DEMO MODE — AI battle begins. UAE-IRAN theater LIVE');
+  let demoTick = 0;
+  const demoActions = [
+    () => { addLog('iran', 'IRGC launches Shahed-136 swarm — 8 drones'); animateMissile('IRAN'); showAlert('⚠ DRONE SWARM DETECTED ⚠'); },
+    () => { addLog('usa', 'Carrier USS Reagan: Tomahawk salvo x4 fired'); animateMissile('USA'); },
+    () => { addLog('israel', 'F-35 airstrike on IRGC command node'); animateMissile('USA'); },
+    () => { addLog('iran', 'S-300 intercept — 2/4 missiles downed'); },
+    () => { addLog('usa', 'Iron Dome intercept — 7/8 drones stopped'); state.scores.USA += 180; updateScores(); },
+    () => { addLog('iran', 'Ballistic missile launch from Tabriz'); animateMissile('IRAN'); showAlert('⚠ BALLISTIC MISSILE INBOUND ⚠'); },
+    () => { addLog('usa', 'Arrow-3 intercept — SUCCESS'); state.scores.USA += 120; updateScores(); },
+    () => { triggerRandomEvent(); },
+    () => { addLog('iran', 'Houthi anti-ship missile — UAE shipping lane'); animateMissile('IRAN'); },
+    () => { addLog('usa', 'B-2 stealth strike — Natanz facility struck'); animateMissile('USA'); state.scores.USA += 300; updateScores(); },
+  ];
+
+  demoInterval = setInterval(() => {
+    if (demoTick < demoActions.length) {
+      demoActions[demoTick]();
+      demoTick++;
+    } else {
+      demoTick = 0; // loop
+    }
+  }, 4000);
+}
+
+// ============ EVENTS & TIMERS ============
+function addLog(type, msg) {
+  const log = document.getElementById('intel-log');
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  const timeStr = String(Math.floor(logTime/60)).padStart(2,'0') + ':' + String(logTime%60).padStart(2,'0');
+  logTime++;
+  const classes = { usa: 'log-usa', israel: 'log-israel', iran: 'log-iran', event: 'log-event', warn: 'log-warn', sys: 'log-time' };
+  entry.innerHTML = `<span class="log-time">[${timeStr}]</span> <span class="${classes[type]||'log-time'}">${msg}</span>`;
+  log.appendChild(entry);
+  log.scrollTop = log.scrollHeight;
+}
+
+function showAlert(msg) {
+  const banner = document.getElementById('alert-banner');
+  banner.textContent = msg;
+  banner.style.display = 'block';
+  setTimeout(() => { banner.style.display = 'none'; }, 2500);
+}
+
+function updateScores() {
+  document.getElementById('score-usa').textContent = state.scores.USA.toLocaleString();
+  document.getElementById('score-iran').textContent = state.scores.IRAN.toLocaleString();
+}
+
+function triggerRandomEvent() {
+  const ev = randomEvents[Math.floor(Math.random() * randomEvents.length)];
+  const evLog = document.getElementById('event-log');
+  const div = document.createElement('div');
+  div.innerHTML = `<span style="color:var(--gold)">${ev.text}</span>`;
+  div.style.cssText = 'margin-bottom:4px; animation: log-in 0.3s ease';
+  evLog.innerHTML = '';
+  evLog.appendChild(div);
+  addLog('event', ev.text);
+  
+  // Apply effect
+  if (ev.faction === 'USA') {
+    state.resources.USA.money += 200;
+    state.scores.USA += 100;
+  } else if (ev.faction === 'IRAN') {
+    state.resources.IRAN.money += 200;
+    state.scores.IRAN += 100;
+  }
+  updateResourceBars();
+  updateScores();
+  showAlert('📡 INTEL: ' + ev.text.substring(0, 30) + '...');
+}
+
+function closeAid() {
+  document.getElementById('aid-popup').style.display = 'none';
+}
+
+function startTimers() {
+  aidInterval = setInterval(() => {
+    state.aidTimer--;
+    document.getElementById('aid-timer').textContent = state.aidTimer + 's';
+    if (state.aidTimer <= 0) {
+      state.aidTimer = 20 + Math.floor(Math.random() * 20);
+      triggerRandomEvent();
+    }
+  }, 1000);
+
+  turnInterval = setInterval(() => {
+    state.turnTimer--;
+    document.getElementById('turn-timer').textContent = state.turnTimer + 's';
+    if (state.turnTimer <= 0) {
+      state.turnTimer = 60;
+      endTurn();
+    }
+  }, 1000);
+}
+
+// Pre-select UAE region
+setTimeout(() => { selectRegion('uae'); }, 100);
+</script>
+</body>
+</html>

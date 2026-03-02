@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Sacred Prayers</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold:#c9a84c;--gold-light:#f0d080;--deep:#0d0a18;--dark:#13102a;
+    --mid:#1e1840;--panel:#1a153588;--text:#f0e8d0;--muted:#8070a0;
+    --a1:#7c4fc4;--a2:#4a8fc4;--r:18px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;background:var(--deep);color:var(--text);font-family:'EB Garamond',serif;overflow:hidden;}
+  #stars{position:fixed;inset:0;z-index:0;
+    background:radial-gradient(ellipse at 60% 20%,#2a165088 0%,#0d0a18 65%);}
+  #stars::before,#stars::after{content:'';position:absolute;inset:0;
+    background-image:
+      radial-gradient(1px 1px at 8% 12%,#fffa 0%,transparent 100%),
+      radial-gradient(1.5px 1.5px at 22% 7%,#fff9 0%,transparent 100%),
+      radial-gradient(1px 1px at 40% 20%,#fffc 0%,transparent 100%),
+      radial-gradient(2px 2px at 55% 5%,#c9a84c55 0%,transparent 100%),
+      radial-gradient(1px 1px at 72% 15%,#fff8 0%,transparent 100%),
+      radial-gradient(1px 1px at 88% 28%,#fffa 0%,transparent 100%),
+      radial-gradient(1px 1px at 15% 38%,#fff6 0%,transparent 100%),
+      radial-gradient(1.5px 1.5px at 48% 45%,#fffb 0%,transparent 100%),
+      radial-gradient(1px 1px at 78% 40%,#fff7 0%,transparent 100%),
+      radial-gradient(1px 1px at 35% 60%,#fff5 0%,transparent 100%),
+      radial-gradient(2px 2px at 92% 52%,#c9a84c44 0%,transparent 100%),
+      radial-gradient(1px 1px at 62% 72%,#fff6 0%,transparent 100%),
+      radial-gradient(1px 1px at 18% 80%,#fffb 0%,transparent 100%),
+      radial-gradient(1.5px 1.5px at 82% 85%,#fff9 0%,transparent 100%);
+    animation:twinkle 4s ease-in-out infinite alternate;}
+  #stars::after{animation-delay:-2s;animation-duration:7s;opacity:.5;}
+  @keyframes twinkle{0%{opacity:.5}100%{opacity:1}}
+
+  #app{position:relative;z-index:1;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+
+  .header{text-align:center;padding:18px 16px 10px;flex-shrink:0;}
+  .header h1{font-family:'Cinzel Decorative',serif;font-size:20px;color:var(--gold);
+    letter-spacing:2px;text-shadow:0 0 30px #c9a84c77;line-height:1.3;}
+  .header p{font-size:11px;color:var(--muted);margin-top:3px;font-style:italic;letter-spacing:.8px;}
+
+  .nav{display:flex;gap:6px;padding:0 12px 10px;flex-shrink:0;overflow-x:auto;scrollbar-width:none;}
+  .nav::-webkit-scrollbar{display:none;}
+  .nav-btn{background:var(--panel);border:1px solid #ffffff18;border-radius:20px;
+    padding:7px 14px;font-size:12px;color:var(--muted);cursor:pointer;white-space:nowrap;
+    transition:all .25s;font-family:'EB Garamond',serif;letter-spacing:.4px;backdrop-filter:blur(8px);}
+  .nav-btn.active,.nav-btn:hover{background:linear-gradient(135deg,#7c4fc455,#4a8fc433);
+    border-color:#c9a84c55;color:var(--gold-light);}
+
+  .content{flex:1;overflow-y:auto;padding:0 12px 80px;scrollbar-width:thin;scrollbar-color:#3a2a6030 transparent;}
+
+  .faiths-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none;}
+  .faiths-row::-webkit-scrollbar{display:none;}
+  .faith-chip{display:flex;flex-direction:column;align-items:center;gap:4px;
+    background:var(--panel);border:1.5px solid transparent;border-radius:14px;
+    padding:10px 10px 8px;cursor:pointer;min-width:62px;transition:all .3s;
+    flex-shrink:0;backdrop-filter:blur(8px);}
+  .faith-chip.sel{border-color:var(--gold);background:linear-gradient(160deg,#2a1a5088,#1e184888);
+    box-shadow:0 0 18px #c9a84c33;}
+  .faith-chip .icon{font-size:24px;line-height:1;}
+  .faith-chip .name{font-size:10px;color:var(--muted);text-align:center;}
+  .faith-chip.sel .name{color:var(--gold-light);}
+
+  .sec{font-family:'Cinzel Decorative',serif;font-size:12px;color:var(--gold);
+    margin:16px 0 8px;letter-spacing:1px;display:flex;align-items:center;gap:8px;}
+  .sec::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,#c9a84c44,transparent);}
+
+  .pcard{background:var(--panel);border:1px solid #ffffff14;border-radius:var(--r);
+    padding:13px 14px;margin-bottom:9px;backdrop-filter:blur(10px);cursor:pointer;
+    transition:all .3s;position:relative;overflow:hidden;}
+  .pcard::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;
+    background:linear-gradient(180deg,var(--gold),var(--a1));opacity:0;transition:opacity .3s;}
+  .pcard:hover{border-color:#c9a84c33;transform:translateX(3px);}
+  .pcard:hover::before{opacity:1;}
+  .ct{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
+  .cname{font-size:15px;font-weight:600;}
+  .creason{font-size:12px;color:var(--muted);font-style:italic;line-height:1.5;margin-bottom:8px;}
+  .cstats{display:flex;gap:10px;align-items:center;}
+  .spill{display:flex;align-items:center;gap:4px;background:#ffffff0a;border-radius:20px;
+    padding:4px 9px;font-size:11px;color:var(--muted);}
+  .spill.hot{color:#f09050;}.spill.gld{color:var(--gold);}
+  .pbtn{margin-left:auto;background:linear-gradient(135deg,var(--a1),var(--a2));
+    border:none;border-radius:20px;padding:5px 14px;font-size:12px;color:#fff;
+    cursor:pointer;font-family:'EB Garamond',serif;transition:all .25s;}
+  .pbtn:hover{transform:scale(1.05);box-shadow:0 3px 14px #7c4fc455;}
+  .pbtn:active{transform:scale(.96);}
+
+  .addpanel{background:var(--panel);border:1px solid #c9a84c44;border-radius:var(--r);
+    padding:16px;margin-bottom:14px;backdrop-filter:blur(10px);}
+  .addpanel h3{font-family:'Cinzel Decorative',serif;font-size:12px;color:var(--gold);margin-bottom:12px;}
+  .frow{margin-bottom:10px;}
+  .frow label{font-size:11px;color:var(--muted);display:block;margin-bottom:3px;letter-spacing:.4px;}
+  .frow input,.frow textarea,.frow select{width:100%;background:#0d0a18bb;
+    border:1px solid #ffffff18;border-radius:10px;padding:9px 12px;font-size:13px;
+    color:var(--text);font-family:'EB Garamond',serif;resize:none;outline:none;
+    transition:border-color .2s;-webkit-appearance:none;}
+  .frow input:focus,.frow textarea:focus,.frow select:focus{border-color:#c9a84c77;}
+  .frow select option{background:#1e1840;}
+  .sbtn{width:100%;background:linear-gradient(135deg,#c9a84c,#a07030);border:none;
+    border-radius:12px;padding:13px;font-size:14px;color:var(--deep);
+    font-family:'Cinzel Decorative',serif;cursor:pointer;letter-spacing:1px;
+    font-weight:700;transition:all .25s;}
+  .sbtn:hover{transform:scale(1.02);box-shadow:0 5px 18px #c9a84c44;}
+
+  .lbi{display:flex;align-items:center;gap:10px;background:var(--panel);
+    border:1px solid #ffffff10;border-radius:14px;padding:11px 13px;
+    margin-bottom:7px;backdrop-filter:blur(8px);cursor:pointer;transition:all .25s;}
+  .lbi:hover{border-color:#c9a84c33;}
+  .lrank{font-family:'Cinzel Decorative',serif;font-size:17px;width:30px;text-align:center;flex-shrink:0;}
+  .lrank.r1{color:#ffd700;text-shadow:0 0 10px #ffd70077;}
+  .lrank.r2{color:#c0c0c0;}.lrank.r3{color:#cd7f32;}.lrank.rN{color:var(--muted);font-size:13px;}
+  .linfo{flex:1;}
+  .lname{font-size:14px;font-weight:600;margin-bottom:1px;}
+  .lsub{font-size:11px;color:var(--muted);font-style:italic;}
+  .lcnt{text-align:right;}
+  .lnum{font-family:'Cinzel Decorative',serif;font-size:17px;color:var(--gold);}
+  .llbl{font-size:10px;color:var(--muted);}
+
+  .modal-overlay{position:fixed;inset:0;z-index:100;background:#0d0a18ee;
+    backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;
+    padding:20px;opacity:0;pointer-events:none;transition:opacity .3s;}
+  .modal-overlay.open{opacity:1;pointer-events:all;}
+  .modal{background:linear-gradient(160deg,#1e184a,#130f2a);border:1px solid #c9a84c77;
+    border-radius:24px;padding:26px 22px;max-width:360px;width:100%;text-align:center;
+    position:relative;transform:scale(.88) translateY(24px);
+    transition:transform .4s cubic-bezier(.34,1.56,.64,1);
+    box-shadow:0 20px 60px #00000099,0 0 50px #c9a84c1a;}
+  .modal-overlay.open .modal{transform:scale(1) translateY(0);}
+  .micon{font-size:52px;margin-bottom:10px;}
+  .mtitle{font-family:'Cinzel Decorative',serif;font-size:14px;color:var(--gold);margin-bottom:4px;}
+  .mname{font-size:19px;font-weight:600;margin-bottom:8px;}
+  .mtext{font-size:13px;color:#c8bae0;line-height:1.75;font-style:italic;
+    margin-bottom:18px;padding:12px;background:#ffffff07;
+    border-radius:12px;border-left:2px solid #c9a84c77;text-align:left;}
+  .mcls{background:linear-gradient(135deg,var(--gold),#a07030);border:none;
+    border-radius:12px;padding:11px 28px;font-size:14px;color:var(--deep);
+    font-family:'Cinzel Decorative',serif;cursor:pointer;font-weight:700;letter-spacing:.5px;}
+  .amen{font-size:10px;color:var(--muted);margin-top:8px;letter-spacing:2px;}
+
+  .gline{height:1px;background:linear-gradient(90deg,transparent,#c9a84c44,transparent);margin:14px 0;}
+
+  .mrow{display:flex;align-items:center;gap:10px;background:var(--panel);
+    border:1px solid #ffffff0e;border-radius:14px;padding:11px 13px;margin-bottom:7px;}
+  .micon2{font-size:22px;}.minfo{flex:1;}
+  .mnam{font-size:14px;font-weight:600;}.mtim{font-size:11px;color:var(--muted);font-style:italic;}
+
+  .toast{position:fixed;bottom:78px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;border-radius:20px;
+    padding:9px 18px;font-size:12px;z-index:200;opacity:0;pointer-events:none;
+    transition:all .4s;white-space:nowrap;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .page{display:none;}.page.active{display:block;}
+
+  /* candle animation */
+  .candle-wrap{display:flex;justify-content:center;margin:16px 0 8px;}
+  .candle{display:inline-flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;}
+  .flame{width:12px;height:20px;background:radial-gradient(ellipse at 50% 80%,#f0d060,#f09020 40%,transparent 100%);
+    border-radius:50% 50% 40% 40%;animation:flicker 1.5s ease-in-out infinite alternate;
+    box-shadow:0 0 12px #f09020,0 0 24px #f0602044;}
+  @keyframes flicker{0%{transform:scaleX(1) scaleY(1)}50%{transform:scaleX(.9) scaleY(1.07)}100%{transform:scaleX(1.05) scaleY(.97)}}
+  .stick{width:4px;height:30px;background:linear-gradient(180deg,#e0c080,#c0a060);border-radius:2px;}
+  .base{width:20px;height:6px;background:linear-gradient(180deg,#c0a060,#a08040);border-radius:3px;}
+</style>
+</head>
+<body>
+<div id="stars"></div>
+<div id="app">
+  <div class="header">
+    <h1>☩ SACRED PRAYERS ✡</h1>
+    <p>Молитвы объединяют — вера не знает границ</p>
+  </div>
+  <div class="nav">
+    <button class="nav-btn active" onclick="go('home')">🕊 Молитвы</button>
+    <button class="nav-btn" onclick="go('add')">✨ Попросить</button>
+    <button class="nav-btn" onclick="go('rating')">🏆 Рейтинг</button>
+    <button class="nav-btn" onclick="go('mine')">📿 Мои</button>
+  </div>
+  <div class="content">
+
+    <div class="page active" id="page-home">
+      <div class="sec">🌐 Традиция</div>
+      <div class="faiths-row" id="faith-chips"></div>
+      <div class="gline"></div>
+      <div class="sec">🕯 Нуждаются в молитве</div>
+      <div id="plist"></div>
+    </div>
+
+    <div class="page" id="page-add">
+      <div class="candle-wrap">
+        <div class="candle">
+          <div class="flame"></div>
+          <div class="stick"></div>
+          <div class="base"></div>
+        </div>
+      </div>
+      <div class="addpanel">
+        <h3>✨ Попросить молитву</h3>
+        <div class="frow">
+          <label>Имя человека или группы</label>
+          <input type="text" id="inp-name" placeholder="Иван, Мариам, Семья Ковалёвых…">
+        </div>
+        <div class="frow">
+          <label>Причина (необязательно)</label>
+          <textarea id="inp-reason" rows="3" placeholder="Болезнь, трудности, мир, благодарность…"></textarea>
+        </div>
+        <div class="frow">
+          <label>Традиция</label>
+          <select id="inp-faith">
+            <option value="0">🌐 Любая традиция</option>
+            <option value="1">☪️ Ислам</option>
+            <option value="2">✡️ Иудаизм</option>
+            <option value="3">✝️ Католицизм</option>
+            <option value="4">☦️ Православие</option>
+            <option value="5">☸️ Буддизм</option>
+            <option value="6">⛩️ Синтоизм</option>
+            <option value="7">☯️ Даосизм</option>
+            <option value="8">🕉️ Индуизм</option>
+            <option value="9">🔯 Зороастризм</option>
+          </select>
+        </div>
+        <button class="sbtn" onclick="addPrayer()">ВОЗНЕСТИ МОЛИТВУ</button>
+      </div>
+      <p style="text-align:center;color:var(--muted);font-style:italic;font-size:12px;margin-top:6px;">
+        «Молитва — это крылья, на которых душа устремляется к Богу»
+      </p>
+    </div>
+
+    <div class="page" id="page-rating">
+      <div class="sec">🔥 Больше всего молятся за</div>
+      <div id="lb-for"></div>
+      <div class="gline"></div>
+      <div class="sec">🌟 Самые активные молящиеся</div>
+      <div id="lb-who"></div>
+    </div>
+
+    <div class="page" id="page-mine">
+      <div class="sec">📿 Я молился за</div>
+      <div id="mlist"></div>
+      <div id="mempty" style="text-align:center;margin-top:30px;color:var(--muted);font-style:italic;font-size:13px;" hidden>
+        Пока нет молитв.<br>Найдите кого-то, кому нужна ваша молитва ✨
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal" onclick="closeMod(event)">
+  <div class="modal">
+    <div class="micon" id="m-ic">🕊️</div>
+    <div class="mtitle">Молитва вознесена</div>
+    <div class="mname" id="m-nm"></div>
+    <div class="mtext" id="m-tx"></div>
+    <button class="mcls" onclick="closeModDirect()">АМИНЬ · آمين · אמן</button>
+    <div class="amen">✦ ВСЕЛЕНСКАЯ МОЛИТВА ✦</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const F=[
+  {id:0,ic:'🌐',nm:'Все'},
+  {id:1,ic:'☪️',nm:'Ислам'},
+  {id:2,ic:'✡️',nm:'Иудаизм'},
+  {id:3,ic:'✝️',nm:'Католицизм'},
+  {id:4,ic:'☦️',nm:'Православие'},
+  {id:5,ic:'☸️',nm:'Буддизм'},
+  {id:6,ic:'⛩️',nm:'Синтоизм'},
+  {id:7,ic:'☯️',nm:'Даосизм'},
+  {id:8,ic:'🕉️',nm:'Индуизм'},
+  {id:9,ic:'🔯',nm:'Зороастризм'},
+];
+
+const PT={
+  1:["БисмиЛлях ир-Рахман ир-Рахим. Господи, услышь молитву и даруй мир тому, за кого мы молимся. Пусть Твоя бесконечная милость окутает этого человека. Аллахумма аминь.",
+     "Раббана атина фид-дунйа хасанатан ва фил-ахирати хасанатан ва кина 'азабан-нар. Господи наш, яви Свою Рахму к этому человеку."],
+  2:["Барух Ата Адонай Элохейну Мелех а-Олам. Благословен Ты, Господь Бог наш, слышащий каждую молитву. Пусть мир Твой снизойдёт на этого человека. Амен.",
+     "Шма Исраэль, Адонай Элохейну, Адонай Эхад. Пусть Он, Единый, хранит этого человека Своей рукой. Амен."],
+  3:["Pater noster qui es in caelis. Отче наш, да будет воля Твоя. Молим Тебя о здравии и мире того, за кого возносим молитву. Аминь.",
+     "Богородице Дево, радуйся. Ave Maria, gratia plena. Пресвятая Дева, молись о нас. Аминь."],
+  4:["Господи Иисусе Христе, Сыне Божий, помилуй нас грешных. Призри, Господи, на раба Твоего и даруй здравие, мир и Твою неизреченную благодать. Аминь.",
+     "Пресвятая Богородице, спаси нас. Святые угодники Божии, молите Бога о нас. Слава Отцу и Сыну и Святому Духу. Аминь."],
+  5:["Нaмо Амида Буцу. Пусть все существа обретут счастье и будут свободны от страдания. Пусть свет Будды озарит путь этого человека. Ом мани падме хум.",
+     "Пусть этот человек обретёт покой. Пусть страдание отступит, и да приблизится он к пробуждению. Саду, саду, саду."],
+  6:["Харай тамаи кийоку нарантаму. Великие ками, услышьте нашу молитву. Пусть этот человек будет защищён духами-хранителями. Норито тайра ни наму.",
+     "О боги неба и земли, внемлите нашей мольбе. Пусть Ками дарует этому человеку силу и ясность. Канsha shimasu."],
+  7:["Дао, которое может быть названо, не есть вечное Дао. Да течёт жизненная сила этого человека в гармонии с Дао. Вэй-у-вэй — действие через недеяние. Да будет так.",
+     "Пусть Дэ — внутренняя добродетель — наполнит сердце этого человека. Пусть он движется в потоке естественного порядка Вселенной."],
+  8:["Ом Намах Шивая. Ом Намо Бхагавате Васудевая. Господи, пролей Свою Шакти на этого человека. Пусть Брахман, Вишну и Шива хранят его путь. Ом Шанти Шанти Шанти.",
+     "Ом Гам Ганапатайе Намаха. Пусть Ганеша устранит все препятствия. Пусть Лакшми дарует изобилие. Ом Шанти."],
+  9:["Асем Вохи Гаэт. Да будет свет Ахура-Мазды с тобой всегда. Пусть праведность и истина осветят путь этого человека. Аша Вахишта. Спента Арамаити.",
+     "Хормазд, Господь мудрости, пролей Свой свет. Да восторжествует Аша над ложью. Яснa 28."],
+  0:["Господи / Боже / Вселенская сила — услышь голос. Мы молимся за этого человека, что бы ни постигло его. Пусть свет и милость окружат его со всех сторон. Да будет так.\nАминь · آمين · אמן · OM · Намас Тэ"],
+};
+
+let prayers=[
+  {id:1,nm:'Анна К.',re:'Тяжёлая болезнь',fi:4,cnt:247,urg:true},
+  {id:2,nm:'Семья Рашидовых',re:'Потеря близкого',fi:1,cnt:189,urg:true},
+  {id:3,nm:'Давид Л.',re:'Операция на сердце',fi:2,cnt:156,urg:false},
+  {id:4,nm:'Отец Пётр',re:'Помощь в служении',fi:3,cnt:134,urg:false},
+  {id:5,nm:'Мир на Земле',re:'Для всего человечества',fi:0,cnt:2813,urg:false},
+  {id:6,nm:'Юки Т.',re:'Тяжёлые испытания',fi:6,cnt:98,urg:false},
+  {id:7,nm:'Дети Непала',re:'После стихийного бедствия',fi:5,cnt:441,urg:true},
+  {id:8,nm:'Лао Цин',re:'Болезнь матери',fi:7,cnt:72,urg:false},
+  {id:9,nm:'Рам Шарма',re:'Духовный путь',fi:8,cnt:61,urg:false},
+  {id:10,nm:'Ариман Дж.',re:'Обновление веры',fi:9,cnt:38,urg:false},
+];
+let myP=[],sf=0,nid=200;
+
+function fi(id){return F.find(x=>x.id===id)||F[0];}
+
+function init(){
+  if(window.Telegram?.WebApp){Telegram.WebApp.ready();Telegram.WebApp.expand();}
+  renderChips();renderPrayers();renderRating();renderMine();
+}
+
+function renderChips(){
+  document.getElementById('faith-chips').innerHTML=F.map(f=>`
+    <div class="faith-chip ${sf===f.id?'sel':''}" onclick="selF(${f.id})">
+      <div class="icon">${f.ic}</div><div class="name">${f.nm}</div>
+    </div>`).join('');
+}
+
+function selF(id){sf=id;renderChips();renderPrayers();}
+
+function renderPrayers(){
+  const list=sf===0?prayers:prayers.filter(p=>p.fi===sf||p.fi===0);
+  const sorted=[...list].sort((a,b)=>b.cnt-a.cnt);
+  document.getElementById('plist').innerHTML=sorted.map(p=>{
+    const f=fi(p.fi);
+    return`<div class="pcard" onclick="openMod(${p.id})">
+      <div class="ct">
+        <div class="cname">${p.urg?'🔴 ':''}${p.nm}</div>
+        <div style="font-size:20px">${f.ic}</div>
+      </div>
+      <div class="creason">${p.re}</div>
+      <div class="cstats">
+        <div class="spill ${p.cnt>200?'hot':p.cnt>100?'gld':''}">🕯 ${p.cnt.toLocaleString()} молитв</div>
+        ${p.urg?'<div class="spill hot">⚡ Срочно</div>':''}
+        <button class="pbtn" onclick="event.stopPropagation();prayFor(${p.id})">Помолиться</button>
+      </div></div>`;
+  }).join('');
+}
+
+function renderRating(){
+  const sorted=[...prayers].sort((a,b)=>b.cnt-a.cnt);
+  document.getElementById('lb-for').innerHTML=sorted.slice(0,8).map((p,i)=>{
+    const f=fi(p.fi);
+    const rc=i===0?'r1':i===1?'r2':i===2?'r3':'rN';
+    const rl=i<3?['🥇','🥈','🥉'][i]:i+1;
+    return`<div class="lbi" onclick="openMod(${p.id})">
+      <div class="lrank ${rc}">${rl}</div>
+      <div class="linfo"><div class="lname">${f.ic} ${p.nm}</div><div class="lsub">${p.re}</div></div>
+      <div class="lcnt"><div class="lnum">${p.cnt.toLocaleString()}</div><div class="llbl">молитв</div></div>
+    </div>`;
+  }).join('');
+
+  const top=[
+    {nm:'Наташа В.',cnt:83,fi:'☦️'},{nm:'Abdullah M.',cnt:76,fi:'☪️'},
+    {nm:'Sarah K.',cnt:68,fi:'✡️'},{nm:'Padre Carlos',cnt:61,fi:'✝️'},
+    {nm:'Tenzin R.',cnt:54,fi:'☸️'},
+  ];
+  document.getElementById('lb-who').innerHTML=top.map((p,i)=>{
+    const rc=i===0?'r1':i===1?'r2':i===2?'r3':'rN';
+    const rl=i<3?['🥇','🥈','🥉'][i]:i+1;
+    return`<div class="lbi">
+      <div class="lrank ${rc}">${rl}</div>
+      <div class="linfo"><div class="lname">${p.fi} ${p.nm}</div><div class="lsub">Активный молящийся</div></div>
+      <div class="lcnt"><div class="lnum">${p.cnt}</div><div class="llbl">молитв</div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderMine(){
+  const el=document.getElementById('mlist');
+  const em=document.getElementById('mempty');
+  if(!myP.length){el.innerHTML='';em.hidden=false;return;}
+  em.hidden=true;
+  el.innerHTML=[...myP].reverse().map(p=>{
+    const f=fi(p.fi);
+    return`<div class="mrow">
+      <div class="micon2">${f.ic}</div>
+      <div class="minfo"><div class="mnam">${p.nm}</div><div class="mtim">${p.tm}</div></div>
+      <div style="font-size:20px">🕯</div>
+    </div>`;
+  }).join('');
+}
+
+function prayFor(id){
+  const p=prayers.find(x=>x.id===id);if(!p)return;
+  p.cnt++;
+  myP.push({...p,tm:'только что'});
+  renderPrayers();renderRating();renderMine();
+  openMod(id);
+}
+
+function openMod(id){
+  const p=prayers.find(x=>x.id===id);if(!p)return;
+  const f=fi(p.fi);
+  const txts=PT[p.fi]||PT[0];
+  document.getElementById('m-ic').textContent=f.ic;
+  document.getElementById('m-nm').textContent=p.nm;
+  document.getElementById('m-tx').textContent=txts[Math.floor(Math.random()*txts.length)];
+  document.getElementById('modal').classList.add('open');
+}
+function closeMod(e){if(e.target.id==='modal')closeModDirect();}
+function closeModDirect(){document.getElementById('modal').classList.remove('open');}
+
+function addPrayer(){
+  const name=document.getElementById('inp-name').value.trim();
+  const re=document.getElementById('inp-reason').value.trim()||'Нуждается в молитве';
+  const fi=parseInt(document.getElementById('inp-faith').value);
+  if(!name){toast('✨ Введите имя человека');return;}
+  const p={id:++nid,nm:name,re,fi,cnt:1,urg:false};
+  prayers.unshift(p);
+  myP.push({...p,tm:'только что'});
+  document.getElementById('inp-name').value='';
+  document.getElementById('inp-reason').value='';
+  document.getElementById('inp-faith').value='0';
+  renderPrayers();renderRating();renderMine();
+  go('home');toast('🕊 Молитва вознесена!');
+}
+
+function go(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  const idx=['home','add','rating','mine'].indexOf(name);
+  document.querySelectorAll('.nav-btn')[idx]?.classList.add('active');
+}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+init();
+</script>
+</body>
+</html>
